@@ -37,20 +37,25 @@ export class WeatherService {
       );
       return response.data.list;
     } catch (error) {
-      throw new Error('Failed to fetch weather data');
+      throw new Error('날씨 데이터를 불러오는데 실패 했습니다.');
     }
   }
 
-  // 한시간마다 실행 실행하여 이전 날짜 데이터 정리
+  // 로깅용 10초마다 실행
+  // @Cron('*/10 * * * * *')
+  // 한시간마다 실행 실행하여 이전 날짜 정리
   @Cron('0 0 * * * *')
   async fetchAndStoreWeatherData() {
     const CITY_NAME = 'Seoul';
     try {
       const weatherDataList = await this.getWeatherData(CITY_NAME);
       await this.saveWeatherData(weatherDataList);
-      this.logger.log('Weather data saved successfully');
+      this.logger.log('날씨 데이터를 성공적으로 저장 했습니다.');
     } catch (error) {
-      this.logger.error('Failed to fetch or save weather data', error.stack);
+      this.logger.error(
+        '날씨 데이터를 불러오거나 저장하는데 실패 했습니다.',
+        error.stack,
+      );
     }
   }
 
@@ -70,6 +75,7 @@ export class WeatherService {
         weather.temp_max = data.main.temp_max;
         weather.pressure = data.main.pressure;
         weather.humidity = data.main.humidity;
+        weather.clouds = data.clouds.all;
         weather.wind_speed = data.wind.speed;
         weather.wind_deg = data.wind.deg;
         weather.timestamp = timestamp;
@@ -78,8 +84,8 @@ export class WeatherService {
         try {
           await this.weatherRepository.save(weather);
         } catch (error) {
-          this.logger.error('Failed to save weather data', error.stack);
-          throw new Error('Failed to save weather data');
+          this.logger.error('날씨 저장이 실패했습니다.', error.stack);
+          throw new Error('날씨 저장이 실패했습니다.');
         }
       }
     }
@@ -87,7 +93,7 @@ export class WeatherService {
 
   // 매일 자정에 실행하여 이전 날짜 데이터 정리
   @Cron('0 0 0 * * *')
-  async cleanOldWeatherData() {
+  private async cleanOldWeatherData() {
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0);
 
@@ -98,5 +104,17 @@ export class WeatherService {
       timestamp: LessThan(yesterday),
       time_of_day: null,
     });
+  }
+
+  // 추후 일자별, 시간별로 필요하면 로직 수정
+  async getCurrentWeather() {
+    const latestWeather = await this.weatherRepository.find({
+      order: { timestamp: 'DESC' },
+      take: 1,
+    });
+
+    return latestWeather.length > 0
+      ? latestWeather[0]
+      : { message: '데이터가 존재하지 않습니다.' };
   }
 }
