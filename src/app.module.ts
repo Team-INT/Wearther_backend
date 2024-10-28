@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
+import { WeatherModule } from './weather/weather.module';
 
 // TypeORM
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,7 +13,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 // entity
 import { PostModel } from './posts/entities/post.entity';
 import { UserModel } from './users/entities/user.entity';
-import { ConfigModule } from '@nestjs/config';
+import { WeatherModel } from './weather/entities/weather.entity';
 
 @Module({
   imports: [
@@ -23,12 +25,13 @@ import { ConfigModule } from '@nestjs/config';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [PostModel, UserModel],
+      entities: [PostModel, UserModel, WeatherModel],
       synchronize: true,
     }),
     AuthModule,
     UsersModule,
     PostsModule,
+    WeatherModule,
   ],
   controllers: [AppController],
   providers: [AppService],
