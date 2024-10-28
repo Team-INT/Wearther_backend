@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserModel } from 'src/users/entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(UserModel)
+    private readonly usersRepository: Repository<UserModel>,
+  ) {}
+
+  async createUser(user: Pick<UserModel, 'username' | 'email' | 'password'>) {
+    const usernameExists = await this.usersRepository.exists({
+      where: {
+        username: user.username,
+      },
+    });
+
+    if (usernameExists) {
+      throw new BadRequestException('이미 존재하는 별명입니다.');
+    }
+
+    const emailExists = await this.usersRepository.exists({
+      where: {
+        email: user.email,
+      },
+    });
+
+    if (emailExists) {
+      throw new BadRequestException('이미 존재하는 이메일 입니다.');
+    }
+
+    const userObject = this.usersRepository.create({
+      username: user.username,
+      email: user.email,
+      password: user.password,
+    });
+
+    const newUser = await this.usersRepository.save(userObject);
+
+    return newUser;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async getAllUsers() {
+    return this.usersRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async getUserByEmail(email: string) {
+    return this.usersRepository.findOne({
+      where: {
+        email,
+      },
+    });
   }
 }
