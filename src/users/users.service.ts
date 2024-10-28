@@ -42,7 +42,15 @@ export class UsersService {
     return newUser;
   }
 
-  async getAllUsers() {}
+  async getAllUsers() {
+    return this.usersRepository.find();
+  }
 
-  async getUserByEmail() {}
+  async getUserByEmail(email: string) {
+    return this.usersRepository.findOne({
+      where: {
+        email,
+      },
+    });
+  }
 }
