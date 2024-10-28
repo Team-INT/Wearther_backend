@@ -1,1 +1,3 @@
-export class Auth {}
+// dev commit
+
+export class AuthModel {}
