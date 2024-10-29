@@ -14,6 +14,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostModel } from './posts/entities/post.entity';
 import { UserModel } from './users/entities/user.entity';
 import { WeatherModel } from './weather/entities/weather.entity';
+import { TrendModule } from './trend/trend.module';
+import { RecommendationModule } from './recommendation/recommendation.module';
+import { CommunityModule } from './community/community.module';
+import { ProductModule } from './product/product.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -21,7 +26,7 @@ import { WeatherModel } from './weather/entities/weather.entity';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: '127.0.0.1',
-      port: 5432,
+      port: 5431,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
@@ -32,6 +37,11 @@ import { WeatherModel } from './weather/entities/weather.entity';
     UsersModule,
     PostsModule,
     WeatherModule,
+    TrendModule,
+    RecommendationModule,
+    CommunityModule,
+    ProductModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [AppService],
