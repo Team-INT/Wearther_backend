@@ -64,7 +64,7 @@ export class PostsService {
       },
     });
 
-    if (!post) throw new NotFoundException();
+    if (!post) throw new NotFoundException('해당 게시글을 삭제할 수 없습니다.');
 
     return await this.postRepository.delete(postId);
   }
