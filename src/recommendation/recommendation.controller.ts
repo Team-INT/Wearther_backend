@@ -1,34 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// src/modules/recommendation/recommendation.controller.ts
+import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
 import { RecommendationService } from './recommendation.service';
-import { CreateRecommendationDto } from './dto/create-recommendation.dto';
-import { UpdateRecommendationDto } from './dto/update-recommendation.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('recommendation')
+@Controller('recommendations')
 export class RecommendationController {
-  constructor(private readonly recommendationService: RecommendationService) {}
+  constructor(private recommendationService: RecommendationService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createRecommendationDto: CreateRecommendationDto) {
-    return this.recommendationService.create(createRecommendationDto);
+  async createRecommendation(@Req() req, @Body() inputData: any) {
+    return this.recommendationService.createRecommendation(
+      req.user.userId,
+      inputData,
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.recommendationService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.recommendationService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRecommendationDto: UpdateRecommendationDto) {
-    return this.recommendationService.update(+id, updateRecommendationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.recommendationService.remove(+id);
+  async getRecommendations(@Req() req) {
+    return this.recommendationService.getRecommendations(req.user.userId);
   }
 }
