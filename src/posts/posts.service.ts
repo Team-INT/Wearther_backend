@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PostModel } from './entities/post.entity';
 
 @Injectable()
 export class PostsService {
-  create(createPostDto: CreatePostDto) {
-    return 'This action adds a new post';
+  constructor(
+    @InjectRepository(PostModel)
+    private readonly postRepository: Repository<PostModel>,
+  ) {}
+
+  getAllPosts() {
+    return this.postRepository.find({
+      relations: ['author'],
+    });
   }
 
-  findAll() {
-    return `This action returns all posts`;
+  getPostById(id: number) {
+    const post = this.postRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ['author'],
+    });
+
+    if (!post) throw new NotFoundException('해당 게시글을 찾을 수 없습니다.');
+
+    return post;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} post`;
+  async createPost(post: Pick<PostModel, 'id' | 'title' | 'content'>) {
+    const createPost = this.postRepository.create({
+      ...post,
+      author: {
+        id: post.id,
+      },
+    });
+
+    return await this.postRepository.save(createPost);
   }
 
-  update(id: number, updatePostDto: UpdatePostDto) {
-    return `This action updates a #${id} post`;
+  async updatePost(post: Pick<PostModel, 'id' | 'title' | 'content'>) {
+    const updatePost = await this.postRepository.findOne({
+      ...post,
+      where: {
+        id: post.id,
+      },
+    });
+
+    if (!updatePost)
+      throw new NotFoundException('해당 게시글을 업데이트 할 수 없습니다.');
+
+    if (post.title) updatePost.title = post.title;
+    if (post.content) updatePost.content = post.content;
+
+    return await this.postRepository.save(updatePost);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} post`;
+  async deletePost(postId: number) {
+    const post = await this.postRepository.findOne({
+      where: {
+        id: postId,
+      },
+    });
+
+    if (!post) throw new NotFoundException();
+
+    return await this.postRepository.delete(postId);
   }
 }
