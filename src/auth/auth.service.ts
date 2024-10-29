@@ -43,8 +43,11 @@ export class AuthService {
    * @param user - 사용자 정보 (email, id)
    * @returns 액세스 토큰 및 리프레시 토큰
    */
-  loginUser(user: Pick<UserModel, 'email' | 'id'>) {
+  loginUser(user: Pick<UserModel, 'username' | 'email' | 'id'>) {
     return {
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.username,
       accessToken: this.signToken(user, false),
       refreshToken: this.signToken(user, true),
     };
@@ -99,7 +102,10 @@ export class AuthService {
     user: Pick<UserModel, 'username' | 'email' | 'password'>,
   ) {
     // 비밀번호 해시 후 사용자 생성
-    const hash = await bcrypt.hash(user.password, process.env.HASH_ROUNDS);
+    const hash = await bcrypt.hash(
+      user.password,
+      parseInt(process.env.HASH_ROUNDS),
+    );
     const newUser = await this.usersService.createUser({
       ...user,
       password: hash,

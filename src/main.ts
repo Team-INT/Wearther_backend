@@ -9,6 +9,11 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
+
   // Swagger 설정 적용
   const document = setupSwagger(app);
 
@@ -21,6 +26,8 @@ async function bootstrap() {
       },
     }),
   );
+
+  app.enableShutdownHooks();
 
   await app.listen(process.env.PORT ?? 8000);
 }

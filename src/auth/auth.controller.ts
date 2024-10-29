@@ -6,6 +6,9 @@ import { AuthService } from './auth.service';
 // swagger
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
+// pipe
+import { PasswordPipe } from './pipe/password.pipe';
+
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
@@ -41,10 +44,12 @@ export class AuthController {
     const token = this.authService.extractTokenFromHeader(rawToken, false);
     const credentials = this.authService.decodeBasicToken(token);
 
+    console.log(credentials);
     // 추출한 이메일과 비밀번호로 로그인 진행
     return this.authService.loginWithEmail(credentials);
   }
 
+  // 추후 회원가입 로직 구현 예정
   /**
    * 이메일을 통한 회원가입 엔드포인트
    *
@@ -86,8 +91,12 @@ export class AuthController {
   registerEmail(
     @Body('username') username: string,
     @Body('email') email: string,
-    @Body('password') password: string,
+    @Body('password', PasswordPipe) password: string,
   ) {
-    // 추후 회원가입 로직 구현 예정
+    return this.authService.registerWithEmail({
+      username,
+      email,
+      password,
+    });
   }
 }
