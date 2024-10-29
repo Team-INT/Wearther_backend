@@ -1,34 +1,31 @@
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 // entity
 import { PostModel } from 'src/posts/entities/post.entity';
+import { BaseModel } from 'src/common/entities/base.entity';
 
 // constants
 import { RolesEnum } from '../constants/user.const';
 
-@Entity()
-export class UserModel {
-  @PrimaryGeneratedColumn()
-  id: number;
+// swagger
+import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 
+@Entity()
+export class UserModel extends BaseModel {
+  @ApiProperty({ example: '햄깅이', description: '닉네임' })
   @Column({
     length: 12,
     unique: true,
   })
   username: string;
 
+  @ApiProperty({ example: 'user@example.com', description: '이메일 주소' })
   @Column({
     unique: true,
   })
   email: string;
 
+  @ApiHideProperty()
   @Column()
   password: string;
 
@@ -41,10 +38,4 @@ export class UserModel {
 
   @OneToMany(() => PostModel, (post) => post.author, { cascade: true })
   posts: PostModel[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }
