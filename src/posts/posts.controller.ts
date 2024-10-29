@@ -6,10 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { PostModel } from './entities/post.entity';
 
 @Controller('posts')
 export class PostsController {
@@ -17,6 +17,26 @@ export class PostsController {
 
   @Get()
   getPosts() {
-    // return this.postsService.
+    return this.postsService.getAllPosts();
+  }
+
+  @Get(':id')
+  getPost(@Param('id', ParseIntPipe) id: number) {
+    return this.postsService.getPostById(id);
+  }
+
+  @Post()
+  createPosts(createPostDto: Pick<PostModel, 'id' | 'title' | 'content'>) {
+    return this.postsService.createPost(createPostDto);
+  }
+
+  @Patch(':id')
+  patchPost(UpdatePostDto: Pick<PostModel, 'id' | 'title' | 'content'>) {
+    return this.postsService.updatePost(UpdatePostDto);
+  }
+
+  @Delete(':id')
+  deletePost(@Param(':id', ParseIntPipe) id: number) {
+    return this.postsService.deletePost(id);
   }
 }
