@@ -8,7 +8,7 @@ import { BaseModel } from 'src/common/entities/base.entity';
 
 // '여러개'의 포스트는 '하나'의 유저가 작성할 수 있다.
 @Entity()
-export class PostModel extends BaseModel {
+export class PostsModel extends BaseModel {
   @ApiProperty({
     example: '햄깅이',
     description: '작성자',

@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 
 // entity
-import { PostModel } from 'src/posts/entities/post.entity';
+import { PostsModel } from 'src/posts/entities/post.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 
 // constants
@@ -36,6 +36,6 @@ export class UsersModel extends BaseModel {
   })
   role: RolesEnum;
 
-  @OneToMany(() => PostModel, (post) => post.author, { cascade: true })
-  posts: PostModel[];
+  @OneToMany(() => PostsModel, (post) => post.author, { cascade: true })
+  posts: PostsModel[];
 }

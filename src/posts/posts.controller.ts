@@ -1,15 +1,6 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { PostModel } from './entities/post.entity';
+import { PostsModel } from './entities/post.entity';
 import { DeleteResult } from 'typeorm';
 
 @Controller('posts')
@@ -17,26 +8,22 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPosts(): Promise<PostModel[]> {
+  getPosts(): Promise<PostsModel[]> {
     return this.postsService.getAllPosts();
   }
 
   @Get(':id')
-  getPost(@Param('id', ParseIntPipe) id: number): Promise<PostModel> {
+  getPost(@Param('id', ParseIntPipe) id: number): Promise<PostsModel> {
     return this.postsService.getPostById(id);
   }
 
   @Post()
-  createPosts(
-    createPostDto: Pick<PostModel, 'id' | 'title' | 'content'>,
-  ): Promise<PostModel> {
+  createPosts(createPostDto: Pick<PostsModel, 'id' | 'title' | 'content'>): Promise<PostsModel> {
     return this.postsService.createPost(createPostDto);
   }
 
   @Patch(':id')
-  patchPost(
-    UpdatePostDto: Pick<PostModel, 'id' | 'title' | 'content'>,
-  ): Promise<PostModel> {
+  patchPost(UpdatePostDto: Pick<PostsModel, 'id' | 'title' | 'content'>): Promise<PostsModel> {
     return this.postsService.updatePost(UpdatePostDto);
   }
 

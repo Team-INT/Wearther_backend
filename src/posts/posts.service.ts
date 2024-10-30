@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PostModel } from './entities/post.entity';
+import { PostsModel } from './entities/post.entity';
 
 @Injectable()
 export class PostsService {
   constructor(
-    @InjectRepository(PostModel)
-    private readonly postRepository: Repository<PostModel>,
+    @InjectRepository(PostsModel)
+    private readonly postRepository: Repository<PostsModel>,
   ) {}
 
   getAllPosts() {
@@ -29,7 +29,7 @@ export class PostsService {
     return post;
   }
 
-  async createPost(post: Pick<PostModel, 'id' | 'title' | 'content'>) {
+  async createPost(post: Pick<PostsModel, 'id' | 'title' | 'content'>) {
     const createPost = this.postRepository.create({
       ...post,
       author: {
@@ -40,7 +40,7 @@ export class PostsService {
     return await this.postRepository.save(createPost);
   }
 
-  async updatePost(post: Pick<PostModel, 'id' | 'title' | 'content'>) {
+  async updatePost(post: Pick<PostsModel, 'id' | 'title' | 'content'>) {
     const updatePost = await this.postRepository.findOne({
       ...post,
       where: {
@@ -48,8 +48,7 @@ export class PostsService {
       },
     });
 
-    if (!updatePost)
-      throw new NotFoundException('해당 게시글을 업데이트 할 수 없습니다.');
+    if (!updatePost) throw new NotFoundException('해당 게시글을 업데이트 할 수 없습니다.');
 
     if (post.title) updatePost.title = post.title;
     if (post.content) updatePost.content = post.content;

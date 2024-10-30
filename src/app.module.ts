@@ -17,7 +17,7 @@ import {
 } from './common/constant/env-keys.const';
 
 // entity
-import { PostModel } from './posts/entities/post.entity';
+import { PostsModel } from './posts/entities/post.entity';
 import { UsersModel } from './users/entities/users.entity';
 import { WeatherModel } from './weather/entities/weather.entity';
 
@@ -42,7 +42,7 @@ import { WeatherModule } from './weather/weather.module';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [PostModel, UsersModel, WeatherModel],
+      entities: [PostsModel, UsersModel, WeatherModel],
       synchronize: true,
     }),
     AuthModule,
