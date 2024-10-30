@@ -1,7 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { DeleteResult } from 'typeorm';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities/post.entity';
-import { DeleteResult } from 'typeorm';
+
+// entity
+import { UsersModel } from 'src/users/entities/users.entity';
+
+// custom-decorator
+import { User } from 'src/users/decorator/user.decorator';
+
+// dto
+import { CreatePostDto } from './dto/create-post.dto';
+
+// guard
+import { AccessTokenGuard } from 'src/auth/guards/bearer-token.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -18,8 +40,9 @@ export class PostsController {
   }
 
   @Post()
-  createPosts(createPostDto: Pick<PostsModel, 'id' | 'title' | 'content'>): Promise<PostsModel> {
-    return this.postsService.createPost(createPostDto);
+  @UseGuards(AccessTokenGuard)
+  createPosts(@User() user: UsersModel, @Body() createPostDto: CreatePostDto) {
+    return this.postsService.createPost(user.id, createPostDto);
   }
 
   @Patch(':id')
