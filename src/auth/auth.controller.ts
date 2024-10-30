@@ -6,14 +6,12 @@ import { AuthService } from './auth.service';
 // swagger
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
-// pipe
-import { PasswordPipe } from './pipe/password.pipe';
-
 // dto
 import { RegisterUserDto } from './dto/register-user.dto';
 
 // Guard
 import { BasicTokenGuard } from './guards/basic-token.guard';
+import { AccessTokenGuard, RefreshTokenGuard } from './guards/bearer-token.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -46,7 +44,7 @@ export class AuthController {
   })
   @UseGuards(BasicTokenGuard)
   @Post('login/email')
-  loginEmail(@Headers('authorization') rawToken: string) {
+  postLoginEmail(@Headers('authorization') rawToken: string) {
     // 헤더에서 토큰 추출 후 디코딩하여 이메일과 비밀번호를 얻음
     const token = this.authService.extractTokenFromHeader(rawToken, false);
     const credentials = this.authService.decodeBasicToken(token);
@@ -95,7 +93,34 @@ export class AuthController {
     },
   })
   @Post('register/email')
-  registerEmail(@Body() body: RegisterUserDto) {
+  postRegisterEmail(@Body() body: RegisterUserDto) {
     return this.authService.registerWithEmail(body);
+  }
+
+  // @Post('token/access')
+  // @UseGuards()
+
+  @Post('token/access')
+  @UseGuards(RefreshTokenGuard)
+  postRefreshToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
+
+    const newToken = this.authService.rotateToken(token, false);
+
+    return {
+      accessToken: newToken,
+    };
+  }
+
+  @Post('token/refresh')
+  @UseGuards(AccessTokenGuard)
+  postAccessToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
+
+    const newToken = this.authService.rotateToken(token, true);
+
+    return {
+      refreshToken: newToken,
+    };
   }
 }

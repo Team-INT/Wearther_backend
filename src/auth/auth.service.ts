@@ -1,6 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+
+// constants
+import { ENV_JWT_SECRET_KEY } from 'src/common/constant/env-keys.const';
 
 // users
 import { UsersModel } from 'src/users/entities/users.entity';
@@ -14,6 +18,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -153,5 +158,37 @@ export class AuthService {
     };
   }
 
-  // Token 재발급 로직 작업 예정
+  veryfiyToken(token: string) {
+    try {
+      return this.jwtService.verify(token, {
+        secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
+      });
+    } catch (error) {
+      throw new UnauthorizedException('토큰이 만료됐거나 잘못된 토큰입니다.');
+    }
+  }
+
+  rotateToken(token: string, isRefreshToken: boolean) {
+    const decoded = this.jwtService.verify(token, {
+      secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
+      complete: true,
+    });
+
+    /**
+     * sub: id
+     * email: email
+     * type: 'access' | 'refresh'
+     */
+
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException('토큰 재발급은 Refresh 토큰으로만 가능합니다.');
+    }
+
+    return this.signToken(
+      {
+        ...decoded,
+      },
+      isRefreshToken,
+    );
+  }
 }
