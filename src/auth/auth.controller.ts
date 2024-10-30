@@ -79,6 +79,7 @@ export class AuthController {
     description: '회원가입을 위한 사용자 정보',
     schema: {
       type: 'object',
+
       properties: {
         username: { type: 'string', example: 'john_doe' },
         email: { type: 'string', example: 'john.doe@example.com' },

@@ -15,13 +15,14 @@ import {
 } from '@nestjs/swagger';
 
 @ApiTags('User')
+// @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: '전체 유저 조회' })
   @ApiResponse({ status: 200, description: '프로필 조회 성공' })
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get()
   getUsers() {
     return this.usersService.getAllUsers();

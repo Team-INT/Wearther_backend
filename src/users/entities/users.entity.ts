@@ -11,7 +11,7 @@ import { RolesEnum } from '../constants/user.const';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 
 @Entity()
-export class UserModel extends BaseModel {
+export class UsersModel extends BaseModel {
   @ApiProperty({ example: '햄깅이', description: '닉네임' })
   @Column({
     length: 12,

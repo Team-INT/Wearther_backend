@@ -12,7 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 // entity
 import { PostModel } from './posts/entities/post.entity';
-import { UserModel } from './users/entities/user.entity';
+import { UsersModel } from './users/entities/users.entity';
 import { WeatherModel } from './weather/entities/weather.entity';
 import { TrendModule } from './trend/trend.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
@@ -30,7 +30,7 @@ import { CommonModule } from './common/common.module';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [PostModel, UserModel, WeatherModel],
+      entities: [PostModel, UsersModel, WeatherModel],
       synchronize: true,
     }),
     AuthModule,

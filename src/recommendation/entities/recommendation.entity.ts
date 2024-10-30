@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne } from 'typeorm';
 
 // entity
 import { BaseModel } from 'src/common/entities/base.entity';
-import { UserModel } from 'src/users/entities/user.entity';
+import { UsersModel } from 'src/users/entities/users.entity';
 
 export class RecommendationModel extends BaseModel {
   @Column()
@@ -11,6 +11,6 @@ export class RecommendationModel extends BaseModel {
   @Column('text')
   result: string;
 
-  // @ManyToOne(() => UserModel, (user) => user.recommendations)
-  // user: UserModel;
+  // @ManyToOne(() => UsersModel, (user) => user.recommendations)
+  // user: UsersModel;
 }

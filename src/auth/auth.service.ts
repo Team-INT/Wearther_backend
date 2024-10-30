@@ -3,8 +3,11 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 // users
-import { UserModel } from 'src/users/entities/user.entity';
+import { UsersModel } from 'src/users/entities/users.entity';
 import { UsersService } from 'src/users/users.service';
+
+// dto
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +23,7 @@ export class AuthService {
    * @param isRefreshToken - 리프레시 토큰 여부
    * @returns 서명된 JWT 토큰
    */
-  signToken(user: Pick<UserModel, 'email' | 'id'>, isRefreshToken: boolean) {
+  signToken(user: Pick<UsersModel, 'email' | 'id'>, isRefreshToken: boolean) {
     // 토큰에 포함될 페이로드 정보 설정
     const payload = {
       email: user.email,
@@ -43,7 +46,7 @@ export class AuthService {
    * @param user - 사용자 정보 (email, id)
    * @returns 액세스 토큰 및 리프레시 토큰
    */
-  loginUser(user: Pick<UserModel, 'username' | 'email' | 'id'>) {
+  loginUser(user: Pick<UsersModel, 'username' | 'email' | 'id'>) {
     return {
       userId: user.id,
       userEmail: user.email,
@@ -60,9 +63,7 @@ export class AuthService {
    * @returns 인증된 사용자 정보
    * @throws UnauthorizedException - 사용자가 존재하지 않거나 비밀번호가 틀린 경우
    */
-  async authenticateWithEmailAndPassword(
-    user: Pick<UserModel, 'email' | 'password'>,
-  ) {
+  async authenticateWithEmailAndPassword(user: Pick<UsersModel, 'email' | 'password'>) {
     // 이메일로 사용자 검색
     const existingUser = await this.usersService.getUserByEmail(user.email);
 
@@ -86,7 +87,7 @@ export class AuthService {
    * @param user - 사용자 정보 (email, password)
    * @returns 로그인 성공 시 액세스 및 리프레시 토큰 반환
    */
-  async loginWithEmail(user: Pick<UserModel, 'email' | 'password'>) {
+  async loginWithEmail(user: Pick<UsersModel, 'email' | 'password'>) {
     // 사용자 인증 후 로그인 진행
     const existingUser = await this.authenticateWithEmailAndPassword(user);
     return this.loginUser(existingUser);
@@ -98,14 +99,8 @@ export class AuthService {
    * @param user - 사용자 정보 (username, email, password)
    * @returns 회원가입 성공 시 액세스 및 리프레시 토큰 반환
    */
-  async registerWithEmail(
-    user: Pick<UserModel, 'username' | 'email' | 'password'>,
-  ) {
-    // 비밀번호 해시 후 사용자 생성
-    const hash = await bcrypt.hash(
-      user.password,
-      parseInt(process.env.HASH_ROUNDS),
-    );
+  async registerWithEmail(user: RegisterUserDto) {
+    const hash = await bcrypt.hash(user.password, parseInt(process.env.HASH_ROUNDS));
     const newUser = await this.usersService.createUser({
       ...user,
       password: hash,
@@ -127,9 +122,7 @@ export class AuthService {
     const prefix: 'Bearer' | 'Basic' = isBearer ? 'Bearer' : 'Basic';
 
     if (splitToken.length !== 2 || splitToken[0] !== prefix) {
-      throw new UnauthorizedException(
-        'Bearer나 Basic이 아니거나 잘못된 형식의 토큰입니다.',
-      );
+      throw new UnauthorizedException('Bearer나 Basic이 아니거나 잘못된 형식의 토큰입니다.');
     }
 
     const token = splitToken[1];
