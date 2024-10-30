@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
 
 // service
 import { AuthService } from './auth.service';
@@ -8,6 +8,12 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
 // pipe
 import { PasswordPipe } from './pipe/password.pipe';
+
+// dto
+import { RegisterUserDto } from './dto/register-user.dto';
+
+// Guard
+import { BasicTokenGuard } from './guards/basic-token.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -38,13 +44,13 @@ export class AuthController {
       example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
     },
   })
+  @UseGuards(BasicTokenGuard)
   @Post('login/email')
   loginEmail(@Headers('authorization') rawToken: string) {
     // 헤더에서 토큰 추출 후 디코딩하여 이메일과 비밀번호를 얻음
     const token = this.authService.extractTokenFromHeader(rawToken, false);
     const credentials = this.authService.decodeBasicToken(token);
 
-    console.log(credentials);
     // 추출한 이메일과 비밀번호로 로그인 진행
     return this.authService.loginWithEmail(credentials);
   }
@@ -89,15 +95,7 @@ export class AuthController {
     },
   })
   @Post('register/email')
-  registerEmail(
-    @Body('username') username: string,
-    @Body('email') email: string,
-    @Body('password', PasswordPipe) password: string,
-  ) {
-    return this.authService.registerWithEmail({
-      username,
-      email,
-      password,
-    });
+  registerEmail(@Body() body: RegisterUserDto) {
+    return this.authService.registerWithEmail(body);
   }
 }
