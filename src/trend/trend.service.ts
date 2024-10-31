@@ -28,16 +28,6 @@ export class TrendService {
     });
 
     const trendsData = response.data;
-
-    for (const data of trendsData) {
-      const trend = this.trendRepository.create({
-        date: data.date,
-        category: data.category,
-        rank: data.rank,
-        keyword: data.keyword,
-      });
-      await this.trendRepository.save(trend);
-    }
   }
 
   async getTrends(): Promise<TrendModel[]> {
