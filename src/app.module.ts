@@ -1,25 +1,11 @@
 // nest common
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 // TypeORM
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-// constants
-import {
-  ENV_POSTGRES_DATABASE_KEY,
-  ENV_POSTGRES_PASSWORD_KEY,
-  ENV_POSTGRES_USERNAME_KEY,
-  ENV_POSTGRES_PORT_KEY,
-  ENV_POSTGRES_HOST_KEY,
-} from './common/constant/env-keys.const';
-
-// entity
-import { PostsModel } from './posts/entities/post.entity';
-import { UsersModel } from './users/entities/users.entity';
-import { WeatherModel } from './weather/entities/weather.entity';
 
 // module
 import { TrendModule } from './trend/trend.module';
@@ -31,20 +17,37 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { WeatherModule } from './weather/weather.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from '@liaoliaots/nestjs-redis';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ envFilePath: '.env', isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: '127.0.0.1',
-      port: 5432,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      entities: [PostsModel, UsersModel, WeatherModel],
-      synchronize: true,
+    ConfigModule.forRoot({ isGlobal: true }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get('POSTGRES_HOST'),
+        port: parseInt(configService.get('POSTGRES_PORT')),
+        username: configService.get('POSTGRES_USER'),
+        password: configService.get('POSTGRES_PASSWORD'),
+        database: configService.get('POSTGRES_DB'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
+    // RedisModule.forRootAsync({
+    //   useFactory: (configService: ConfigService) => ({
+    //     config: {
+    //       host: configService.get('REDIS_HOST'),
+    //       port: parseInt(configService.get('REDIS_PORT')),
+    //       password: configService.get('REDIS_PASSWORD') || undefined,
+    //     },
+    //   }),
+    //   inject: [ConfigService],
+    // }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     PostsModule,
