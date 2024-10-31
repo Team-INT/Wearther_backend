@@ -10,9 +10,10 @@ import { PostsModel } from './entities/post.entity';
 
 // modules
 import { AuthModule } from 'src/auth/auth.module';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PostsModel]), AuthModule],
+  imports: [TypeOrmModule.forFeature([PostsModel]), AuthModule, UsersModule],
   controllers: [PostsController],
   providers: [PostsService],
 })

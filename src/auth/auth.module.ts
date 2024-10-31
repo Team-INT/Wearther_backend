@@ -16,6 +16,7 @@ import { UsersModule } from 'src/users/users.module';
     }),
     UsersModule,
   ],
+  exports: [AuthService],
   controllers: [AuthController],
   providers: [AuthService],
 })
