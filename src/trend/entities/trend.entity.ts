@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column } from 'typeorm';
 import { BaseModel } from 'src/common/entities/base.entity';
 
 @Entity()
@@ -7,11 +7,20 @@ export class TrendModel extends BaseModel {
   date: Date;
 
   @Column()
-  category: string;
+  category_name: string;
 
   @Column()
-  rank: number;
+  category_param: string;
 
   @Column()
-  keyword: string;
+  device: string;
+
+  @Column()
+  gender: string;
+
+  @Column()
+  age_group: string;
+
+  @Column('float')
+  value: number;
 }

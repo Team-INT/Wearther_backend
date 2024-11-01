@@ -3,20 +3,20 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Entity, Column, ManyToOne } from 'typeorm';
 
 // entity
-import { UserModel } from 'src/users/entities/user.entity';
+import { UsersModel } from 'src/users/entities/users.entity';
 import { BaseModel } from 'src/common/entities/base.entity';
 
 // '여러개'의 포스트는 '하나'의 유저가 작성할 수 있다.
 @Entity()
-export class PostModel extends BaseModel {
+export class PostsModel extends BaseModel {
   @ApiProperty({
     example: '햄깅이',
     description: '작성자',
   })
-  @ManyToOne(() => UserModel, (user) => user.posts, {
+  @ManyToOne(() => UsersModel, (user) => user.posts, {
     nullable: false,
   })
-  author: UserModel;
+  author: UsersModel;
 
   @ApiProperty({ example: '게시글 제목', description: '게시글의 제목' })
   @Column()

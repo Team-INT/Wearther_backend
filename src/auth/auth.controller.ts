@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
 
 // service
 import { AuthService } from './auth.service';
@@ -6,8 +6,12 @@ import { AuthService } from './auth.service';
 // swagger
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
-// pipe
-import { PasswordPipe } from './pipe/password.pipe';
+// dto
+import { RegisterUserDto } from './dto/register-user.dto';
+
+// Guard
+import { BasicTokenGuard } from './guards/basic-token.guard';
+import { AccessTokenGuard, RefreshTokenGuard } from './guards/bearer-token.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -38,13 +42,13 @@ export class AuthController {
       example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
     },
   })
+  @UseGuards(BasicTokenGuard)
   @Post('login/email')
-  loginEmail(@Headers('authorization') rawToken: string) {
+  postLoginEmail(@Headers('authorization') rawToken: string) {
     // 헤더에서 토큰 추출 후 디코딩하여 이메일과 비밀번호를 얻음
     const token = this.authService.extractTokenFromHeader(rawToken, false);
     const credentials = this.authService.decodeBasicToken(token);
 
-    console.log(credentials);
     // 추출한 이메일과 비밀번호로 로그인 진행
     return this.authService.loginWithEmail(credentials);
   }
@@ -79,6 +83,7 @@ export class AuthController {
     description: '회원가입을 위한 사용자 정보',
     schema: {
       type: 'object',
+
       properties: {
         username: { type: 'string', example: 'john_doe' },
         email: { type: 'string', example: 'john.doe@example.com' },
@@ -88,15 +93,75 @@ export class AuthController {
     },
   })
   @Post('register/email')
-  registerEmail(
-    @Body('username') username: string,
-    @Body('email') email: string,
-    @Body('password', PasswordPipe) password: string,
-  ) {
-    return this.authService.registerWithEmail({
-      username,
-      email,
-      password,
-    });
+  postRegisterEmail(@Body() body: RegisterUserDto) {
+    return this.authService.registerWithEmail(body);
+  }
+
+  /**
+   * 액세스 토큰 갱신 엔드포인트
+   *
+   * @param rawToken - 요청 헤더에서 받은 리프레시 토큰
+   * @returns 새로운 액세스 토큰
+   */
+  @ApiOperation({ summary: '액세스 토큰 갱신' })
+  @ApiResponse({
+    status: 200,
+    description: '액세스 토큰 갱신 성공',
+    schema: {
+      example: {
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 실패',
+    schema: {
+      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
+    },
+  })
+  @Post('token/access')
+  @UseGuards(RefreshTokenGuard)
+  postRefreshToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
+    const newToken = this.authService.rotateToken(token, false);
+
+    return {
+      accessToken: newToken,
+    };
+  }
+
+  /**
+   * 리프레시 토큰 갱신 엔드포인트
+   *
+   * @param rawToken - 요청 헤더에서 받은 액세스 토큰
+   * @returns 새로운 리프레시 토큰
+   */
+  @ApiOperation({ summary: '리프레시 토큰 갱신' })
+  @ApiResponse({
+    status: 200,
+    description: '리프레시 토큰 갱신 성공',
+    schema: {
+      example: {
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 실패',
+    schema: {
+      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
+    },
+  })
+  @Post('token/refresh')
+  @UseGuards(AccessTokenGuard)
+  postAccessToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
+    const newToken = this.authService.rotateToken(token, true);
+
+    return {
+      refreshToken: newToken,
+    };
   }
 }

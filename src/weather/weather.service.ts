@@ -22,16 +22,13 @@ export class WeatherService {
 
   private async getCurrentWeatherData(cityName: string) {
     try {
-      const response = await axios.get(
-        'https://api.openweathermap.org/data/2.5/weather',
-        {
-          params: {
-            q: cityName,
-            appid: process.env.OPEN_WEATHER_MAP_SERVICE_KEY,
-            units: 'metric',
-          },
+      const response = await axios.get(process.env.WEATHER_ENDPOINT, {
+        params: {
+          q: cityName,
+          appid: process.env.OPEN_WEATHER_MAP_SERVICE_KEY,
+          units: 'metric',
         },
-      );
+      });
       return response.data;
     } catch (error) {
       throw new Error('현재 날씨 데이터를 불러오는데 실패했습니다.');

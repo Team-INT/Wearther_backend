@@ -1,0 +1,19 @@
+import {
+  createParamDecorator,
+  ExecutionContext,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { UsersModel } from '../entities/users.entity';
+
+export const User = createParamDecorator((data, context: ExecutionContext) => {
+  const request = context.switchToHttp().getRequest();
+  const user = request.user as UsersModel;
+
+  if (!user) {
+    throw new InternalServerErrorException(
+      'User 데코레이터는 AccessTokenGuard와 함께 사용해야 합니다.',
+    );
+  }
+
+  return user;
+});
