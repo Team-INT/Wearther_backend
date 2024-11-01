@@ -97,14 +97,33 @@ export class AuthController {
     return this.authService.registerWithEmail(body);
   }
 
-  // @Post('token/access')
-  // @UseGuards()
-
+  /**
+   * 액세스 토큰 갱신 엔드포인트
+   *
+   * @param rawToken - 요청 헤더에서 받은 리프레시 토큰
+   * @returns 새로운 액세스 토큰
+   */
+  @ApiOperation({ summary: '액세스 토큰 갱신' })
+  @ApiResponse({
+    status: 200,
+    description: '액세스 토큰 갱신 성공',
+    schema: {
+      example: {
+        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 실패',
+    schema: {
+      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
+    },
+  })
   @Post('token/access')
   @UseGuards(RefreshTokenGuard)
   postRefreshToken(@Headers('authorization') rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
-
     const newToken = this.authService.rotateToken(token, false);
 
     return {
@@ -112,11 +131,33 @@ export class AuthController {
     };
   }
 
+  /**
+   * 리프레시 토큰 갱신 엔드포인트
+   *
+   * @param rawToken - 요청 헤더에서 받은 액세스 토큰
+   * @returns 새로운 리프레시 토큰
+   */
+  @ApiOperation({ summary: '리프레시 토큰 갱신' })
+  @ApiResponse({
+    status: 200,
+    description: '리프레시 토큰 갱신 성공',
+    schema: {
+      example: {
+        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증 실패',
+    schema: {
+      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
+    },
+  })
   @Post('token/refresh')
   @UseGuards(AccessTokenGuard)
   postAccessToken(@Headers('authorization') rawToken: string) {
     const token = this.authService.extractTokenFromHeader(rawToken, true);
-
     const newToken = this.authService.rotateToken(token, true);
 
     return {
