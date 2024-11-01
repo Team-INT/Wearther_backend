@@ -19,13 +19,17 @@ export class TrendService {
   constructor(
     @InjectRepository(TrendModel)
     private readonly trendRepository: Repository<TrendModel>,
-    // private readonly httpService: HttpService
     private readonly configService: ConfigService,
   ) {
     this.NAVER_CLIENT_ID = this.configService.get('NAVER_CLIENT_ID');
     this.NAVER_CLIENT_SECRET = this.configService.get('NAVER_CLIENT_SECRET');
   }
 
+  /**
+   * 트렌드 데이터를 조회하는 함수
+   * @param options 검색 옵션 (날짜, 카테고리, 성별, 장치, 연령대 등)
+   * @returns 트렌드 데이터 배열
+   */
   async findTrends(options: any) {
     const query = this.trendRepository.createQueryBuilder('trend');
 
@@ -51,12 +55,19 @@ export class TrendService {
     }
 
     if (options.ages && options.ages.length > 0) {
-      query.andWhere('trend.age_group IN (:...ages', { ages: options.ages });
+      query.andWhere('trend.age_group IN (:...ages)', { ages: options.ages });
     }
 
     return query.getMany();
   }
 
+  /**
+   * 트렌드 데이터를 네이버 API에서 조회하고 저장하는 함수
+   * @param startDate 시작 날짜 (yyyy-mm-dd 형식)
+   * @param endDate 종료 날짜 (yyyy-mm-dd 형식)
+   * @param options 검색 옵션 (카테고리, 장치, 성별, 연령대 등)
+   * @returns 저장된 트렌드 데이터 배열
+   */
   async fetchAndSaveTrends(startDate: string, endDate: string, options: any) {
     const existingData = await this.findTrends(options);
 
@@ -71,7 +82,7 @@ export class TrendService {
       category: options.categories.map((category) => ({
         name: category.name,
         param: category.param,
-      })), //
+      })),
       device: options.device,
       gender: options.gender,
       ages: options.ages,
@@ -110,17 +121,24 @@ export class TrendService {
 
       return savedTrends;
     } catch (error) {
-      console.error('Error saving trends:', error.response?.data || error.message);
+      console.error(
+        '트렌드 데이터를 저장하는 중 오류 발생:',
+        error.response?.data || error.message,
+      );
       throw new HttpException(
-        error.response?.data?.message || 'Failed to fetch trends',
+        error.response?.data?.message || '트렌드 데이터를 가져오는 데 실패했습니다',
         error.response?.status || HttpStatus.BAD_REQUEST,
       );
     }
   }
 
+  /**
+   * 오늘 날짜를 yyyy-mm-dd 형식으로 반환하는 함수
+   * @returns 오늘 날짜 문자열
+   */
   private getTodayDate(): string {
     const today = new Date();
-    return today.toISOString().split('T')[0]; // yyyy-mm-dd 형식
+    return today.toISOString().split('T')[0];
   }
 
   // private async canCallApi(): Promise<boolean> {

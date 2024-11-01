@@ -5,14 +5,11 @@ import { TrendController } from './trend.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrendModel } from './entities/trend.entity';
 
-import { ScheduleModule } from '@nestjs/schedule';
+import { TrendScheduler } from './scheduler/trend.scheduler';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([TrendModel]),
-    ScheduleModule.forRoot(), // 스케줄러 사용을 위한 모듈 등록
-  ],
+  imports: [TypeOrmModule.forFeature([TrendModel])],
   controllers: [TrendController],
-  providers: [TrendService],
+  providers: [TrendService, TrendScheduler],
 })
 export class TrendModule {}
