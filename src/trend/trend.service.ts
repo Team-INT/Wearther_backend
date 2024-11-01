@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 
@@ -36,9 +36,9 @@ export class TrendService {
       });
     }
 
-    if (options.categoryParam) {
-      query.andWhere('trend.category_param = :categoryParam', {
-        categoryParam: options.categoryParam,
+    if (options.categories) {
+      query.andWhere('trend.category_param IN (:...categories)', {
+        categories: options.categories.map((c) => c.param[0]),
       });
     }
 
@@ -64,50 +64,58 @@ export class TrendService {
       return existingData;
     }
 
-    const response = await axios.post(
-      process.env.NAVER_TREND_ENDPOINT,
-      {
-        startDate,
-        endDate,
-        timeUnit: 'date',
-        category: options.category,
-        categoryName: options.categoryName,
-        categoryParam: options.categoryParam,
-        device: options.device,
-        gender: options.gender,
-        ages: options.ages,
-      },
-      {
+    const requestBody = {
+      startDate,
+      endDate,
+      timeUnit: options.timeUnit || 'date',
+      category: options.categories.map((category) => ({
+        name: category.name,
+        param: category.param,
+      })), //
+      device: options.device,
+      gender: options.gender,
+      ages: options.ages,
+    };
+
+    try {
+      const response = await axios.post(process.env.NAVER_TREND_ENDPOINT, requestBody, {
         headers: {
-          'X-Naver-Client-Id': process.env.NAVER_CLIENT_ID,
-          'X-Naver-Client-Secret': process.env.NAVER_CLIENT_SECRET,
+          'X-Naver-Client-Id': this.NAVER_CLIENT_ID,
+          'X-Naver-Client-Secret': this.NAVER_CLIENT_SECRET,
           'Content-Type': 'application/json',
         },
-      },
-    );
+      });
 
-    const trendsData = response.data.results;
+      const trendsData = response.data.results;
+      const savedTrends: TrendModel[] = [];
 
-    const savedTrends: TrendModel[] = [];
+      for (const trend of trendsData) {
+        if (trend.data && Array.isArray(trend.data)) {
+          for (const data of trend.data) {
+            const newTrend = this.trendRepository.create({
+              date: data.period,
+              category_name: trend.title,
+              category_param: trend.category[0],
+              device: options.device || 'all',
+              gender: options.gender || 'all',
+              age_group: options.ages ? options.ages.join(',') : 'all',
+              value: data.ratio,
+            });
 
-    for (const trend of trendsData) {
-      for (const data of trend) {
-        const newTrend = this.trendRepository.create({
-          date: data.period,
-          category_name: trend.title,
-          category_param: trend.category[0],
-          device: options.device || 'all',
-          gender: options.gender || 'all',
-          age_group: options.ages ? options.ages.join(',') : 'all',
-          value: data.ratio,
-        });
-
-        const savedTrend = await this.trendRepository.save(newTrend);
-        savedTrends.push(savedTrend);
+            const savedTrend = await this.trendRepository.save(newTrend);
+            savedTrends.push(savedTrend);
+          }
+        }
       }
-    }
 
-    return savedTrends;
+      return savedTrends;
+    } catch (error) {
+      console.error('Error saving trends:', error.response?.data || error.message);
+      throw new HttpException(
+        error.response?.data?.message || 'Failed to fetch trends',
+        error.response?.status || HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   private getTodayDate(): string {

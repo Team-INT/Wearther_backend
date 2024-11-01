@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { TrendService } from './trend.service';
-import { CreateTrendDto } from './dto/create-trend.dto';
-import { UpdateTrendDto } from './dto/update-trend.dto';
 
 @Controller('trend')
 export class TrendController {
@@ -30,12 +17,21 @@ export class TrendController {
     @Query('timeUnit') timeUnit?: string,
   ) {
     const ageArray = ages ? ages.split(',') : [];
+
+    const categoryNames = categoryName.split(',');
+    const categoryParams = categoryParam.split(',');
+    const categories = categoryNames.map((name, index) => ({
+      name: name.trim(),
+      param: categoryParams[index] ? [categoryParams[index].trim()] : [],
+    }));
+
     const options = {
+      startDate,
+      endDate,
       gender,
       ages: ageArray,
       device,
-      categoryName,
-      categoryParam,
+      categories,
       timeUnit,
     };
 
@@ -43,10 +39,8 @@ export class TrendController {
       const trends = await this.trendService.fetchAndSaveTrends(startDate, endDate, options);
       return trends;
     } catch (error) {
-      throw new HttpException(
-        error.message,
-        error.getStatus ? error.getStatus() : HttpStatus.BAD_REQUEST,
-      );
+      console.error('Error fetching trends:', error.response?.data || error.message);
+      throw new HttpException(error.message, error.response?.status || HttpStatus.BAD_REQUEST);
     }
   }
 }
