@@ -42,6 +42,17 @@ export class AuthController {
       example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
     },
   })
+  @ApiBody({
+    description: '로그인 정보',
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'john.doe@example.com' },
+        password: { type: 'string', example: 'password123' },
+      },
+      required: ['email', 'password'],
+    },
+  })
   @UseGuards(BasicTokenGuard)
   @Post('login/email')
   postLoginEmail(@Headers('authorization') rawToken: string) {

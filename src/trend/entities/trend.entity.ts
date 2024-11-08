@@ -6,6 +6,9 @@ export class TrendModel extends BaseModel {
   @Column()
   date: Date;
 
+  // @Column()
+  // month: Date;
+
   @Column()
   category_name: string;
 
