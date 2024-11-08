@@ -119,6 +119,8 @@ export class TrendService {
         }
       }
 
+      console.log('트랜드 데이터 호출 성공 및 저장 완료')
+
       return savedTrends;
     } catch (error) {
       console.error(
