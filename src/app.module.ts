@@ -19,6 +19,7 @@ import { PostsModule } from './posts/posts.module';
 import { WeatherModule } from './weather/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
 // import { RedisModule } from '@liaoliaots/nestjs-redis';
+import { OpenaiModule } from './openai/openai.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CommunityModule,
     ProductModule,
     CommonModule,
+    OpenaiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
