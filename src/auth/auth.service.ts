@@ -55,7 +55,7 @@ export class AuthService {
     return {
       userId: user.id,
       userEmail: user.email,
-      userName: user.username,
+      username: user.username,
       accessToken: this.signToken(user, false),
       refreshToken: this.signToken(user, true),
     };

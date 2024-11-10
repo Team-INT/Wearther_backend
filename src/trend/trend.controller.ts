@@ -93,7 +93,7 @@ export class TrendController {
     name: 'gender',
     description: '성별 필터 (male, female)',
     required: false,
-    example: 'female',
+    example: 'f',
   })
   @ApiQuery({
     name: 'ages',

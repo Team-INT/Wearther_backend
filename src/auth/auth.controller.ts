@@ -64,7 +64,6 @@ export class AuthController {
     return this.authService.loginWithEmail(credentials);
   }
 
-  // 추후 회원가입 로직 구현 예정
   /**
    * 이메일을 통한 회원가입 엔드포인트
    *
