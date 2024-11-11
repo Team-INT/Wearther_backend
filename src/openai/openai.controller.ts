@@ -12,23 +12,25 @@ export class OpenaiController {
   async getRecommendation(@Body() input: FashionRecommendationDto) {
     try {
       const result = await this.openaiService.getOpenaiResponse(input);
+
       return {
         success_response: {
           status: 200,
           data: {
             info: {
               summary: '패션 추천 결과입니다.',
-              details: result.choices[0].message.content,
-              keywords: result.choices[0].text.trim(),
+              details: result,
+              keywords: [],
               related: [],
             },
           },
         },
       };
     } catch (error) {
+      console.error('Error in recommendation:', error);
       return {
         error_response: {
-          status: '오류',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: {
             code: 'API_ERROR',
             message: error.message,

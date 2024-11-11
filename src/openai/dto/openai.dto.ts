@@ -28,3 +28,15 @@ export class FashionRecommendationDto {
   @IsString()
   additionalInfo?: string;
 }
+
+export interface OpenAIResponse {
+  status: number;
+  data: {
+    info: {
+      summary: string;
+      details: string;
+      keywords: string[];
+      related: string[];
+    };
+  };
+}
