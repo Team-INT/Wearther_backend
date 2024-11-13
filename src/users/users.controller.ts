@@ -1,31 +1,25 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, Body, Patch, Delete } from '@nestjs/common';
 
 // guard
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { User } from 'src/auth/decorators/user.decorator';
 
-// serivce
+// service
 import { UsersService } from './users.service';
 
 // swagger
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { UsersModel } from './entities/users.entity';
 
 @ApiTags('User')
-// @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: '전체 유저 조회' })
-  @ApiResponse({ status: 200, description: '프로필 조회 성공' })
-  @Get()
-  getUsers() {
-    return this.usersService.getAllUsers();
-  }
-
-  @ApiOperation({ summary: '이메일로 유저 조회' })
+  @ApiOperation({ summary: '내 정보 조회' })
   @ApiResponse({
     status: 200,
-    description: '유저 조회 성공',
+    description: '내 정보 조회 성공',
     schema: {
       example: {
         id: 1,
@@ -36,25 +30,25 @@ export class UsersController {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: '유저를 찾을 수 없음',
-    schema: {
-      example: {
-        statusCode: 404,
-        message: '유저를 찾을 수 없습니다.',
-        error: 'Not Found',
-      },
-    },
-  })
-  @ApiParam({
-    name: 'email',
-    description: '조회할 유저의 이메일',
-    required: true,
-    example: 'example@example.com',
-  })
-  @Get(':email')
-  getUser(@Param('email') email: string) {
-    return this.usersService.getUserByEmail(email);
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMyProfile(@User() user) {
+    return this.usersService.getUserById(user.id);
+  }
+
+  @ApiOperation({ summary: '내 정보 수정' })
+  @ApiResponse({ status: 200, description: '정보 수정 성공' })
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  updateMyProfile(@User() user, @Body() updateData: Partial<UsersModel>) {
+    return this.usersService.updateUser(user.id, updateData);
+  }
+
+  @ApiOperation({ summary: '회원 탈퇴' })
+  @ApiResponse({ status: 200, description: '회원 탈퇴 성공' })
+  @UseGuards(JwtAuthGuard)
+  @Delete('me')
+  deleteMyAccount(@User() user) {
+    return this.usersService.deleteUser(user.id);
   }
 }
