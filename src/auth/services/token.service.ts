@@ -1,5 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UsersModel } from 'src/users/entities/users.entity';
 
 /**
@@ -23,7 +24,10 @@ export interface TokenPayload {
  */
 @Injectable()
 export class TokenService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * 사용자 정보를 기반으로 JWT 토큰을 생성
@@ -38,7 +42,14 @@ export class TokenService {
       type: isRefreshToken ? 'refresh' : 'access',
     };
 
-    return this.jwtService.sign(payload);
+    const expiresIn = isRefreshToken
+      ? `${this.configService.get<number>('REFRESH_TOKEN_TIME', 1440)}m`
+      : `${this.configService.get<number>('ACCESS_TOKEN_TIME', 60)}m`;
+
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_SECRET'),
+      expiresIn,
+    });
   }
 
   /**
@@ -49,8 +60,9 @@ export class TokenService {
    */
   verifyToken(token: string): TokenPayload {
     try {
-      const decoded = this.jwtService.verify<TokenPayload>(token);
-      return decoded;
+      return this.jwtService.verify<TokenPayload>(token, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
     } catch (error) {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }

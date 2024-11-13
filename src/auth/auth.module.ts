@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -17,9 +18,15 @@ import { UsersModule } from '../users/users.module';
     // Passport 기본 전략을 JWT로 설정
     PassportModule.register({ defaultStrategy: 'jwt' }),
     // JWT 모듈 설정
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' }, // 기본 만료 시간 1시간
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get<number>('ACCESS_TOKEN_TIME', 60)}m`,
+        },
+      }),
     }),
     // 사용자 정보 조회를 위한 UsersModule
     UsersModule,

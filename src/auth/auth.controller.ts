@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  UseGuards,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
 // services
@@ -56,10 +64,26 @@ export class AuthController {
     description: '회원가입 성공',
     type: AuthResponseDto,
   })
+  @ApiResponse({
+    status: 500,
+    description: '회원가입 처리 중 오류가 발생했습니다.',
+  })
   @ApiBody({ type: RegisterUserDto })
   @Post('register/email')
   async register(@Body() registerDto: RegisterUserDto): Promise<AuthResponseDto> {
-    return this.authService.registerWithEmail(registerDto);
+    try {
+      return await this.authService.registerWithEmail(registerDto);
+    } catch (error) {
+      console.error('Registration error:', error);
+
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        error.message || '회원가입 처리 중 오류가 발생했습니다.',
+      );
+    }
   }
 
   @ApiOperation({

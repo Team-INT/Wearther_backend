@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { TokenService } from './services/token.service';
 import { AuthCredentialsService } from './services/auth-credentials.service';
@@ -18,16 +23,15 @@ export class AuthService {
 
   /**
    * 사용자 정보를 기반으로 인증 토큰들을 생성
-   * @param user - 토큰에 포함될 사용자 정보
-   * @returns 생성된 토큰들과 사용자 정보
    */
-  generateAuthTokens(user: Pick<UsersModel, 'email' | 'id' | 'username'>) {
+  generateAuthTokens(user: UsersModel) {
+    const { id, email, username } = user;
     return {
-      userId: user.id,
-      userEmail: user.email,
-      username: user.username,
-      accessToken: this.tokenService.signToken(user, false),
-      refreshToken: this.tokenService.signToken(user, true),
+      userId: id,
+      userEmail: email,
+      username: username,
+      accessToken: this.tokenService.signToken({ id, email }, false),
+      refreshToken: this.tokenService.signToken({ id, email }, true),
     };
   }
 
@@ -47,12 +51,23 @@ export class AuthService {
    * @returns 인증 토큰들과 사용자 정보
    */
   async registerWithEmail(userData: RegisterUserDto) {
-    const hashedPassword = await this.credentialsService.hashPassword(userData.password);
-    const newUser = await this.usersService.createUser({
-      ...userData,
-      password: hashedPassword,
-    });
+    try {
+      const hashedPassword = await this.credentialsService.hashPassword(userData.password);
+      const newUser = await this.usersService.createUser({
+        ...userData,
+        password: hashedPassword,
+      });
 
-    return this.generateAuthTokens(newUser);
+      return this.generateAuthTokens(newUser);
+    } catch (error) {
+      // 이미 적절한 예외(ConflictException 등)면 그대로 throw
+      if (error instanceof ConflictException || error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      // 그 외 에러는 로깅 후 500 에러
+      console.error('Register service error:', error);
+      throw new InternalServerErrorException('회원가입 처리 중 오류가 발생했습니다.');
+    }
   }
 }
