@@ -29,20 +29,6 @@ export class AuthController {
 
   @ApiOperation({
     summary: '이메일 로그인',
-    description: `
-    \`\`\`javascript
-    fetch('/auth/login/email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: 'user@example.com',
-        password: 'password123'
-      })
-    });
-    \`\`\`
-    `,
   })
   @ApiResponse({
     status: 200,
@@ -64,21 +50,6 @@ export class AuthController {
 
   @ApiOperation({
     summary: '회원가입',
-    description: `
-    \`\`\`javascript
-    fetch('/auth/register/email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: 'user@example.com',
-        password: 'password123',
-        username: 'username'
-      })
-    });
-    \`\`\`
-    `,
   })
   @ApiResponse({
     status: 201,
@@ -93,16 +64,6 @@ export class AuthController {
 
   @ApiOperation({
     summary: '액세스 토큰 갱신',
-    description: `
-    \`\`\`javascript
-    fetch('/auth/token/access', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer {refresh_token}'
-      }
-    });
-    \`\`\`
-    `,
   })
   @ApiResponse({
     status: 200,
@@ -121,16 +82,6 @@ export class AuthController {
 
   @ApiOperation({
     summary: '리프레시 토큰 갱신',
-    description: `
-    \`\`\`javascript
-    fetch('/auth/token/refresh', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer {access_token}'
-      }
-    });
-    \`\`\`
-    `,
   })
   @ApiResponse({
     status: 200,
