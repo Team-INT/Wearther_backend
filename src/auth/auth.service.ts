@@ -24,7 +24,7 @@ export class AuthService {
   /**
    * 사용자 정보를 기반으로 인증 토큰들을 생성
    */
-  generateAuthTokens(user: UsersModel) {
+  private generateAuthTokens(user: UsersModel) {
     const { id, email, username } = user;
     return {
       userId: id,
@@ -40,7 +40,7 @@ export class AuthService {
    * @param credentials - 이메일과 비밀번호
    * @returns 인증 토큰들과 사용자 정보
    */
-  async loginWithEmail(credentials: Pick<UsersModel, 'email' | 'password'>) {
+  public async loginWithEmail(credentials: Pick<UsersModel, 'email' | 'password'>) {
     const user = await this.credentialsService.validateUser(credentials);
     return this.generateAuthTokens(user);
   }
@@ -50,7 +50,7 @@ export class AuthService {
    * @param userData - 회원가입 정보
    * @returns 인증 토큰들과 사용자 정보
    */
-  async registerWithEmail(userData: RegisterUserDto) {
+  public async registerWithEmail(userData: RegisterUserDto) {
     try {
       const hashedPassword = await this.credentialsService.hashPassword(userData.password);
       const newUser = await this.usersService.createUser({

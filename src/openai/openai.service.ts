@@ -61,7 +61,7 @@ export class OpenaiService {
               related: rawResponse.success_response.data.info.related || [],
             },
           },
-        };
+        }; 
       }
       throw new Error('응답 메시지가 텍스트 형식이 아닙니다.');
     } catch (error) {
