@@ -11,7 +11,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrendModule } from './trend/trend.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
 import { CommunityModule } from './community/community.module';
-import { ProductModule } from './product/product.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -20,7 +19,7 @@ import { WeatherModule } from './weather/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
 // import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { OpenaiModule } from './openai/openai.module';
-import { validate } from './config/env.validation';
+import { validate } from './common/config/env.validation';
 
 @Module({
   imports: [
@@ -51,7 +50,6 @@ import { validate } from './config/env.validation';
     TrendModule,
     RecommendationModule,
     CommunityModule,
-    ProductModule,
     CommonModule,
     OpenaiModule,
   ],

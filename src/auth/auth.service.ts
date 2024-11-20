@@ -37,11 +37,11 @@ export class AuthService {
 
   /**
    * 이메일 로그인 처리
-   * @param credentials - 이메일과 비밀번호
+   * @param loginDto - 이메일과 비밀번호
    * @returns 인증 토큰들과 사용자 정보
    */
-  public async loginWithEmail(credentials: Pick<UsersModel, 'email' | 'password'>) {
-    const user = await this.credentialsService.validateUser(credentials);
+  public async loginWithEmail(loginDto: Pick<UsersModel, 'email' | 'password'>) {
+    const user = await this.credentialsService.validateUser(loginDto);
     return this.generateAuthTokens(user);
   }
 
@@ -60,12 +60,10 @@ export class AuthService {
 
       return this.generateAuthTokens(newUser);
     } catch (error) {
-      // 이미 적절한 예외(ConflictException 등)면 그대로 throw
       if (error instanceof ConflictException || error instanceof UnauthorizedException) {
         throw error;
       }
 
-      // 그 외 에러는 로깅 후 500 에러
       console.error('Register service error:', error);
       throw new InternalServerErrorException('회원가입 처리 중 오류가 발생했습니다.');
     }

@@ -48,12 +48,12 @@ export class AuthController {
     description: '인증 실패',
   })
   @ApiBody({ type: LoginDto })
-  @UseGuards(BasicTokenGuard)
+  // @UseGuards(BasicTokenGuard)
   @Post('login/email')
-  async login(@Headers('authorization') rawToken: string): Promise<AuthResponseDto> {
-    const token = this.tokenService.extractTokenFromHeader(rawToken, false);
-    const credentials = this.credentialsService.decodeBasicToken(token);
-    return this.authService.loginWithEmail(credentials);
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+    // const token = this.tokenService.extractTokenFromHeader(rawToken, false);
+    // const credentials = this.credentialsService.decodeBasicToken(token);
+    return this.authService.loginWithEmail(loginDto);
   }
 
   @ApiOperation({

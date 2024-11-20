@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
 import { UsersModel } from 'src/users/entities/users.entity';
+import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
 export class AuthCredentialsService {
@@ -21,7 +22,7 @@ export class AuthCredentialsService {
     };
   }
 
-  async validateUser(credentials: Pick<UsersModel, 'email' | 'password'>) {
+  async validateUser(credentials: LoginDto) {
     const user = await this.usersService.getUserByEmail(credentials.email);
     if (!user) {
       throw new UnauthorizedException('존재하지 않는 사용자입니다.');

@@ -1,20 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
+// dto/login.dto.ts
+import { PickType } from '@nestjs/mapped-types';
+import { UsersModel } from 'src/users/entities/users.entity';
+import { IsNotEmpty } from 'class-validator';
 
-export class LoginDto {
-  @ApiProperty({
-    example: 'user@example.com',
-    description: '사용자 이메일',
-  })
-  @IsEmail()
+export class LoginDto extends PickType(UsersModel, ['email', 'password'] as const) {
   email: string;
 
-  @ApiProperty({
-    example: 'password123',
-    description: '사용자 비밀번호',
-  })
-  @IsString()
-  @MinLength(6)
-  @MaxLength(24)
+  @IsNotEmpty()
   password: string;
 }
