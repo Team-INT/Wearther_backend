@@ -5,9 +5,27 @@ import { AppModule } from './app.module';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { setupSwagger } from 'swagger.config';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      exceptionFactory: (errors) => {
+        console.log('Validation errors:', errors);
+        return new BadRequestException(
+          errors.map((error) => ({
+            field: error.property,
+            message: Object.values(error.constraints)[0],
+          })),
+        );
+      },
+    }),
+  );
 
   app.enableCors({
     origin: 'http://localhost:3000', // 허용할 도메인

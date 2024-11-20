@@ -1,67 +1,52 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from '../auth.service';
-import { UsersService } from 'src/users/users.service';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { TokenService, TokenPayload } from '../services/token.service';
 
+/**
+ * Bearer 토큰 인증을 처리하는 기본 가드
+ * Access 토큰과 Refresh 토큰 가드의 기본 클래스
+ */
 @Injectable()
 export class BearerTokenGuard implements CanActivate {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly tokenService: TokenService) {}
+
+  /**
+   * 요청에 포함된 Bearer 토큰을 검증
+   * @param context - 실행 컨텍스트
+   * @returns 인증 성공 여부
+   * @throws UnauthorizedException 토큰이 유효하지 않거나 잘못된 타입인 경우
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const rawToken = request.headers['authorization'];
+    const rawToken = request.headers.authorization;
 
-    if (!rawToken) {
-      throw new UnauthorizedException('Bearer 토큰이 존재하지 않습니다.');
+    // 헤더에서 토큰 추출
+    const token = this.tokenService.extractTokenFromHeader(rawToken, true);
+    // 토큰 검증 및 디코딩
+    const payload = this.tokenService.verifyToken(token);
+
+    // 토큰 타입 검증
+    if (this instanceof RefreshTokenGuard && payload.type !== 'refresh') {
+      throw new UnauthorizedException('Refresh 토큰이 아닙니다.');
     }
 
-    const token = this.authService.extractTokenFromHeader(rawToken, true);
-    const result = this.authService.veryfiyToken(token);
-    const user = await this.usersService.getUserByEmail(result.email);
-
-    /**
-     * 1. user 정보
-     * 2. token(request에 들어가는 토큰)
-     * 3. tokenType - access | refresh
-     */
-    try {
-      request.user = user;
-      request.token = token;
-      request.tokenType = result.type;
-    } catch (error) {
-      throw new UnauthorizedException('Bearer 토큰 인증에 실패하였습니다.');
+    if (this instanceof AccessTokenGuard && payload.type !== 'access') {
+      throw new UnauthorizedException('Access 토큰이 아닙니다.');
     }
+
+    // 검증된 페이로드를 요청 객체에 저장
+    request.user = payload;
     return true;
   }
 }
 
+/**
+ * Access 토큰 전용 가드
+ */
 @Injectable()
-export class AccessTokenGuard extends BearerTokenGuard {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    await super.canActivate(context);
+export class AccessTokenGuard extends BearerTokenGuard {}
 
-    const request = context.switchToHttp().getRequest();
-
-    if (request.tokenType !== 'access') {
-      throw new UnauthorizedException('access 토큰이 아닙니다.');
-    }
-
-    return true;
-  }
-}
-
+/**
+ * Refresh 토큰 전용 가드
+ */
 @Injectable()
-export class RefreshTokenGuard extends BearerTokenGuard {
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    await super.canActivate(context);
-
-    const request = context.switchToHttp().getRequest();
-
-    if (request.tokenType !== 'refresh') {
-      throw new UnauthorizedException('refresh 토큰이 아닙니다.');
-    }
-
-    return true;
-  }
-}
+export class RefreshTokenGuard extends BearerTokenGuard {}

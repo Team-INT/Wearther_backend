@@ -1,178 +1,124 @@
-import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Headers,
+  UseGuards,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
-// service
+// services
 import { AuthService } from './auth.service';
-
-// swagger
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { TokenService } from './services/token.service';
+import { AuthCredentialsService } from './services/auth-credentials.service';
 
 // dto
 import { RegisterUserDto } from './dto/register-user.dto';
+import { LoginDto } from './dto/login.dto';
 
-// Guard
+// guards
 import { BasicTokenGuard } from './guards/basic-token.guard';
 import { AccessTokenGuard, RefreshTokenGuard } from './guards/bearer-token.guard';
+
+// responses
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { TokenResponseDto } from './dto/token-response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenService: TokenService,
+    private readonly credentialsService: AuthCredentialsService,
+  ) {}
 
-  /**
-   * 이메일을 통한 로그인 처리 엔드포인트
-   *
-   * @param rawToken - 요청 헤더에서 받은 인증 토큰 (Base64 인코딩된 이메일:패스워드 형태)
-   * @returns 로그인 결과 (액세스 토큰 및 리프레시 토큰)
-   */
-  @ApiOperation({ summary: '로그인' })
+  @ApiOperation({
+    summary: '이메일 로그인',
+  })
   @ApiResponse({
     status: 200,
     description: '로그인 성공',
-    schema: {
-      example: {
-        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    type: AuthResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: '인증 실패',
-    schema: {
-      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
-    },
   })
-  @ApiBody({
-    description: '로그인 정보',
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'john.doe@example.com' },
-        password: { type: 'string', example: 'password123' },
-      },
-      required: ['email', 'password'],
-    },
-  })
-  @UseGuards(BasicTokenGuard)
+  @ApiBody({ type: LoginDto })
+  // @UseGuards(BasicTokenGuard)
   @Post('login/email')
-  postLoginEmail(@Headers('authorization') rawToken: string) {
-    // 헤더에서 토큰 추출 후 디코딩하여 이메일과 비밀번호를 얻음
-    const token = this.authService.extractTokenFromHeader(rawToken, false);
-    const credentials = this.authService.decodeBasicToken(token);
-
-    // 추출한 이메일과 비밀번호로 로그인 진행
-    return this.authService.loginWithEmail(credentials);
+  async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
+    // const token = this.tokenService.extractTokenFromHeader(rawToken, false);
+    // const credentials = this.credentialsService.decodeBasicToken(token);
+    return this.authService.loginWithEmail(loginDto);
   }
 
-  // 추후 회원가입 로직 구현 예정
-  /**
-   * 이메일을 통한 회원가입 엔드포인트
-   *
-   * @param username - 사용자 이름
-   * @param email - 사용자 이메일
-   * @param password - 사용자 비밀번호
-   */
-  @ApiOperation({ summary: '회원가입' })
+  @ApiOperation({
+    summary: '회원가입',
+  })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: '회원가입 성공',
-    schema: {
-      example: {
-        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    type: AuthResponseDto,
   })
   @ApiResponse({
-    status: 401,
-    description: '인증 실패',
-    schema: {
-      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
-    },
+    status: 500,
+    description: '회원가입 처리 중 오류가 발생했습니다.',
   })
-  @ApiBody({
-    description: '회원가입을 위한 사용자 정보',
-    schema: {
-      type: 'object',
-
-      properties: {
-        username: { type: 'string', example: 'john_doe' },
-        email: { type: 'string', example: 'john.doe@example.com' },
-        password: { type: 'string', example: 'password123' },
-      },
-      required: ['username', 'email', 'password'],
-    },
-  })
+  @ApiBody({ type: RegisterUserDto })
   @Post('register/email')
-  postRegisterEmail(@Body() body: RegisterUserDto) {
-    return this.authService.registerWithEmail(body);
+  async register(@Body() registerDto: RegisterUserDto): Promise<AuthResponseDto> {
+    try {
+      return await this.authService.registerWithEmail(registerDto);
+    } catch (error) {
+      console.error('Registration error:', error);
+
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        error.message || '회원가입 처리 중 오류가 발생했습니다.',
+      );
+    }
   }
 
-  /**
-   * 액세스 토큰 갱신 엔드포인트
-   *
-   * @param rawToken - 요청 헤더에서 받은 리프레시 토큰
-   * @returns 새로운 액세스 토큰
-   */
-  @ApiOperation({ summary: '액세스 토큰 갱신' })
+  @ApiOperation({
+    summary: '액세스 토큰 갱신',
+  })
   @ApiResponse({
     status: 200,
-    description: '액세스 토큰 갱신 성공',
-    schema: {
-      example: {
-        accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    description: '토큰 갱신 성공',
+    type: TokenResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: '인증 실패',
-    schema: {
-      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
-    },
-  })
-  @Post('token/access')
+  @ApiBearerAuth('access-token')
   @UseGuards(RefreshTokenGuard)
-  postRefreshToken(@Headers('authorization') rawToken: string) {
-    const token = this.authService.extractTokenFromHeader(rawToken, true);
-    const newToken = this.authService.rotateToken(token, false);
+  @Post('token/access')
+  async refreshAccessToken(@Headers('authorization') rawToken: string): Promise<TokenResponseDto> {
+    const token = this.tokenService.extractTokenFromHeader(rawToken, true);
+    const accessToken = this.tokenService.rotateToken(token, false);
 
-    return {
-      accessToken: newToken,
-    };
+    return { accessToken };
   }
 
-  /**
-   * 리프레시 토큰 갱신 엔드포인트
-   *
-   * @param rawToken - 요청 헤더에서 받은 액세스 토큰
-   * @returns 새로운 리프레시 토큰
-   */
-  @ApiOperation({ summary: '리프레시 토큰 갱신' })
+  @ApiOperation({
+    summary: '리프레시 토큰 갱신',
+  })
   @ApiResponse({
     status: 200,
-    description: '리프레시 토큰 갱신 성공',
-    schema: {
-      example: {
-        refreshToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      },
-    },
+    description: '토큰 갱신 성공',
+    type: TokenResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: '인증 실패',
-    schema: {
-      example: { statusCode: 401, message: '인증 실패', error: 'Unauthorized' },
-    },
-  })
-  @Post('token/refresh')
+  @ApiBearerAuth('access-token')
   @UseGuards(AccessTokenGuard)
-  postAccessToken(@Headers('authorization') rawToken: string) {
-    const token = this.authService.extractTokenFromHeader(rawToken, true);
-    const newToken = this.authService.rotateToken(token, true);
+  @Post('token/refresh')
+  async refreshRefreshToken(@Headers('authorization') rawToken: string): Promise<TokenResponseDto> {
+    const token = this.tokenService.extractTokenFromHeader(rawToken, true);
+    const refreshToken = this.tokenService.rotateToken(token, true);
 
-    return {
-      refreshToken: newToken,
-    };
+    return { refreshToken };
   }
 }

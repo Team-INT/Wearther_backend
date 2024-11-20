@@ -11,7 +11,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrendModule } from './trend/trend.module';
 import { RecommendationModule } from './recommendation/recommendation.module';
 import { CommunityModule } from './community/community.module';
-import { ProductModule } from './product/product.module';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -20,10 +19,15 @@ import { WeatherModule } from './weather/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
 // import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { OpenaiModule } from './openai/openai.module';
+import { validate } from './common/config/env.validation';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+      validate,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -38,16 +42,6 @@ import { OpenaiModule } from './openai/openai.module';
       }),
       inject: [ConfigService],
     }),
-    // RedisModule.forRootAsync({
-    //   useFactory: (configService: ConfigService) => ({
-    //     config: {
-    //       host: configService.get('REDIS_HOST'),
-    //       port: parseInt(configService.get('REDIS_PORT')),
-    //       password: configService.get('REDIS_PASSWORD') || undefined,
-    //     },
-    //   }),
-    //   inject: [ConfigService],
-    // }),
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
@@ -56,7 +50,6 @@ import { OpenaiModule } from './openai/openai.module';
     TrendModule,
     RecommendationModule,
     CommunityModule,
-    ProductModule,
     CommonModule,
     OpenaiModule,
   ],

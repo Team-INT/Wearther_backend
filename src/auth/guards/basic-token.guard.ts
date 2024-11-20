@@ -1,27 +1,23 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { TokenService } from '../services/token.service';
+import { AuthCredentialsService } from '../services/auth-credentials.service';
 
 @Injectable()
 export class BasicTokenGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly tokenService: TokenService,
+    private readonly credentialsService: AuthCredentialsService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const rawToken = request.headers['authorization'];
+    const rawToken = request.headers.authorization;
 
-    if (!rawToken) {
-      throw new UnauthorizedException('Basic 토큰이 존재하지 않습니다.');
-    }
+    const token = this.tokenService.extractTokenFromHeader(rawToken, false);
+    const credentials = this.credentialsService.decodeBasicToken(token);
 
-    const token = this.authService.extractTokenFromHeader(rawToken, false);
-    const { email, password } = this.authService.decodeBasicToken(token);
-    const user = await this.authService.authenticateWithEmailAndPassword({
-      email,
-      password,
-    });
-
-    request.user = user;
-
+    request.user = credentials;
     return true;
   }
 }
