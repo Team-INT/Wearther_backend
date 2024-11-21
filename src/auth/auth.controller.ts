@@ -51,9 +51,10 @@ export class AuthController {
   // @UseGuards(BasicTokenGuard)
   @Post('login/email')
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    // const token = this.tokenService.extractTokenFromHeader(rawToken, false);
-    // const credentials = this.credentialsService.decodeBasicToken(token);
-    return this.authService.loginWithEmail(loginDto);
+    return this.authService.loginWithEmail(loginDto).then((response) => ({
+      ...response,
+      email: response.userEmail,
+    }));
   }
 
   @ApiOperation({
@@ -72,7 +73,11 @@ export class AuthController {
   @Post('register/email')
   async register(@Body() registerDto: RegisterUserDto): Promise<AuthResponseDto> {
     try {
-      return await this.authService.registerWithEmail(registerDto);
+      const response = await this.authService.registerWithEmail(registerDto);
+      return {
+        ...response,
+        email: response.userEmail,
+      };
     } catch (error) {
       console.error('Registration error:', error);
 
