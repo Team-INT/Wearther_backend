@@ -5,7 +5,7 @@ export class AuthResponseDto {
   userId: number;
 
   @ApiProperty({ example: 'user@example.com' })
-  userEmail: string;
+  email: string;
 
   @ApiProperty({ example: 'username' })
   username: string;
