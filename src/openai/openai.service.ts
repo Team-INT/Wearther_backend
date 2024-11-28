@@ -61,7 +61,7 @@ export class OpenaiService {
               related: rawResponse.success_response.data.info.related || [],
             },
           },
-        }; 
+        };
       }
       throw new Error('응답 메시지가 텍스트 형식이 아닙니다.');
     } catch (error) {
@@ -73,13 +73,15 @@ export class OpenaiService {
   private buildPrompt(input: FashionRecommendationDto): string {
     return `
       다음 조건에 맞는 패션 스타일을 추천해주세요:
+      - 이름: ${input.name}
       - 연령대: ${input.age}
       - 성별: ${input.gender}
-      - 계절: ${input.season}
-      - 날씨: ${input.weather}
-      - 선호 스타일: ${input.style}
-      - 기분/분위기: ${input.mood}
-      - 추가 정보: ${input.additionalInfo}
+      - 패션 스타일 유형: ${input.fashionTypes.join(', ')}
+      - 기분/분위기: ${input.moods.join(', ')}
+      - 쇼핑몰: ${input.shoppingMall}
+      - 추가 쇼핑몰 정보: ${input.otherShoppingMall ?? '없음'}
+      - 추가 정보: ${input.additionalInfo ?? '없음'}
+      - 동의 여부: ${input.agreement ? '예' : '아니오'}
     `;
   }
 }

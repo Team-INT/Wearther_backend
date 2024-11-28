@@ -1,6 +1,10 @@
-import { IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsArray } from 'class-validator';
 
 export class FashionRecommendationDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
   @IsString()
   @IsNotEmpty()
   age: string;
@@ -9,24 +13,29 @@ export class FashionRecommendationDto {
   @IsNotEmpty()
   gender: string;
 
-  @IsString()
+  @IsArray()
   @IsNotEmpty()
-  season: string;
+  fashionTypes: string[];
+
+  @IsArray()
+  @IsNotEmpty()
+  moods: string[];
 
   @IsString()
-  @IsNotEmpty()
-  weather: string;
+  @IsOptional()
+  shoppingMall?: string;
 
   @IsString()
-  @IsNotEmpty()
-  style: string;
+  @IsOptional()
+  otherShoppingMall?: string;
 
   @IsString()
-  @IsNotEmpty()
-  mood: string;
-
-  @IsString()
+  @IsOptional()
   additionalInfo?: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  agreement: boolean;
 }
 
 export interface OpenAIResponse {
